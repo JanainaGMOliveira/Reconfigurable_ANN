@@ -1,19 +1,19 @@
 `timescale 1ns/100ps
 
 module mac_TB;
-	wire clkMAC;
+	wire clk;
 	reg start;
-	reg [(20 * 8)-1:0] ix; // ENTRADAS DO MAC
-	reg [(20 * 16)-1:0] iw; // PESOS
-	reg [15:0] iBias; // BIAS
-	reg iFlagBias; // FLAG QUE INDICA SE HA BIAS
-	reg [4:0] iQtdEntradas; // QUANTIDADE DE ENTRADAS DA CAMADA
+	reg [(20 * 8)-1:0] ix;
+	reg [(20 * 16)-1:0] iw;
+	reg [15:0] iBias;
+	reg iFlagBias;
+	reg [4:0] iNumberInputs;
 
-    wire [31:0] oSoma; // SOMA FINAL
-	wire oSomaOK; // FLAG QUE INDICA QUE A SOMA FINALIZOU
+    wire [31:0] oSum;
+	wire oSumOK;
 
-    clockGeneratorByPeriod #(20) clock(clkMAC);
-    mac #(20) DUT(oSoma, oSomaOK, clkMAC, start, ix, iw, iBias, iFlagBias, iQtdEntradas);
+    clockGeneratorByPeriod #(20) clock(clk);
+    mac #(20) DUT(oSum, oSumOK, clk, start, ix, iw, iBias, iFlagBias, iNumberInputs);
 
     initial
     begin
@@ -61,7 +61,7 @@ module mac_TB;
 
         iBias = 16'b000001_0000000000; //1 
         iFlagBias = 1'b1;
-        iQtdEntradas = 5'd20;
+        iNumberInputs = 5'd20;
 
         start = 1'b0; #50
         start = 1'b1; #50

@@ -1,13 +1,13 @@
 module mac #(parameter neuros = 20)(
-	output reg [31:0] oSoma, // SOMA FINAL
-	output reg oSomaOK, // FLAG QUE INDICA QUE A SOMA FINALIZOU
-	input clkMAC,
+	output reg [31:0] oSum,
+	output reg oSumOK,
+	input clk,
 	input start,
-	input [(neuros * 8)-1:0] ix, // ENTRADAS DO MAC
-	input [(neuros * 16)-1:0] iw, // PESOS
-	input [15:0] iBias, // BIAS
-	input iFlagBias, // FLAG QUE INDICA SE HA BIAS
-	input [4:0] iQtdEntradas // QUANTIDADE DE ENTRADAS DA CAMADA
+	input [(neuros * 8)-1:0] ix,  // mac inputs
+	input [(neuros * 16)-1:0] iw, // weights
+	input [15:0] iBias,           // bias
+	input iFlagBias,              // 1: there is bias
+	input [4:0] iNumberInputs
 );
 	// get the values for each input
 	wire [7:0] auxX [0:neuros-1];
@@ -32,35 +32,33 @@ module mac #(parameter neuros = 20)(
 	(* syn_encoding = "safe" *) reg [1:0] currentState, nextState;
 	parameter S0 = 2'b00, S1 = 2'b01, S2 = 2'b10;
 	
-	reg [7:0] auxX1, auxX2; //auxiliares para a entrada x
-	reg [15:0] auxW1, auxW2; //auxiliares para a entrada w
+	reg [7:0] auxX1, auxX2;  // update x values
+	reg [15:0] auxW1, auxW2; // update w values
 	
-	wire [31:0] aux1, aux2; // AUXILIARES SAÍDAS MULTIPLICADORES
-	wire [31:0] auxS; // AUXILIAR SAÍDA SOMA
-	reg [31:0] auxOut1; // AUXILIARES SAÍDAS MULTIPLICADORES
+	wire [31:0] auxProd1, auxPro2; // multiplier partial outputs
+	wire [31:0] auxS;              // partial sum
 	
-	multiplier m1(auxX1, auxW1, aux1);
-	multiplier m2(auxX2, auxW2, aux2);
+	multiplier m1(auxX1, auxW1, auxProd1);
+	multiplier m2(auxX2, auxW2, auxPro2);
 	
-	assign auxS = SomaOverflow(aux1, aux2);
+	assign auxS = SumOverflow(auxProd1, auxPro2);
 	
-	// Função para controle de flag
-	function [31:0] SomaOverflow;
+	function [31:0] SumOverflow;
 		input [31:0] iA, iB;
 		
 		reg [31:0] aux;
 		begin
 			aux = iA + iB;
 			if (iA[31] == 1'b1 & iB[31] == 1'b1 & aux[31] == 1'b0)
-				aux = 32'b10000000000000000000000000000000;
+				aux = {1'b1, {31{1'b0}}};
 			else if (iA[31] == 1'b0 & iB[31] == 1'b0 & aux[31] == 1'b1)
-				aux = 32'b01111111111111111111111111111111;
+				aux = {1'b0, {31{1'b1}}};
 				
-			SomaOverflow = aux;
+			SumOverflow = aux;
 		end
 	endfunction
 	
-	always @(negedge clkMAC, posedge start)
+	always @(negedge clk, posedge start)
 	begin
 		if(start)
 		begin
@@ -72,23 +70,22 @@ module mac #(parameter neuros = 20)(
 		end
 	end
 
-   	always @ (currentState, start, negedge clkMAC)
+   	always @ (currentState, start, negedge clk)
 	begin
 		case (currentState)
-			S0: // INITIAL PREPARATION TO MAC
+			S0: // INITIAL PREPARATION MAC
 			begin
-				oSomaOK = 1'b0;
+				oSumOK = 1'b0;
 				i = 5'b0;
 				auxX1 = auxX[i];
 				auxW1 = auxW[i];
 				auxX2 = auxX[i+1];
 				auxW2 = auxW[i+1];
-				auxOut1 = 32'b0;
 				
 				if (iFlagBias)
-					oSoma = {{6{iBias[15]}}, iBias, {10{1'b0}}}; 
+					oSum = {{6{iBias[15]}}, iBias, {10{1'b0}}}; 
 				else
-					oSoma = 32'b0;
+					oSum = 32'b0;
 				
 				if(start)
 					nextState = S0;
@@ -97,15 +94,15 @@ module mac #(parameter neuros = 20)(
 			end
 			S1: // MULTIPLICATION
 			begin
-				oSoma = SomaOverflow(oSoma, auxS); // SUM PREVIOUS PRODUCT
-				auxX1 = auxX[i]; // GET NEW VALUES
+				oSum = SumOverflow(oSum, auxS); // SUM PREVIOUS PRODUCT
+				auxX1 = auxX[i];                // GET NEW VALUES
 				auxW1 = auxW[i];
 				auxX2 = auxX[i+1];
 				auxW2 = auxW[i+1];
 				
-				if ((iQtdEntradas - 3) > i)
+				if ((iNumberInputs - 3) > i)
 				begin
-					i = i + 2; // INCREASE COUNTER
+					i = i + 2; // INCREASE COUNTER - 2 multiplications each time
 					nextState = S1;
 				end
 				else
@@ -119,13 +116,13 @@ module mac #(parameter neuros = 20)(
 			end
 			S2: // END OF MULTIPLICATIONS
 			begin
-				oSomaOK = 1'b1;
+				oSumOK = 1'b1;
 				
 				nextState <= S0;
 			end
 			default:
 			begin
-				oSomaOK = 1'b0;
+				oSumOK = 1'b0;
 				nextState = S0;
 			end
 		endcase
