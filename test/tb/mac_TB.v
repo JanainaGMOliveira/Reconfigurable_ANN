@@ -1,0 +1,91 @@
+`timescale 1ns/100ps
+
+module mac_TB;
+	wire clkMAC;
+	reg start;
+	reg [(20 * 8)-1:0] ix; // ENTRADAS DO MAC
+	reg [(20 * 16)-1:0] iw; // PESOS
+	reg [15:0] iBias; // BIAS
+	reg iFlagBias; // FLAG QUE INDICA SE HA BIAS
+	reg [4:0] iQtdEntradas; // QUANTIDADE DE ENTRADAS DA CAMADA
+
+    wire [31:0] oSoma; // SOMA FINAL
+	wire oSomaOK; // FLAG QUE INDICA QUE A SOMA FINALIZOU
+
+    clockGeneratorByPeriod #(20) clock(clkMAC);
+    mac #(20) DUT(oSoma, oSomaOK, clkMAC, start, ix, iw, iBias, iFlagBias, iQtdEntradas);
+
+    initial
+    begin
+        ix[1 *8 - 1: 0 *8] = 8'b001_00000; // 1
+        ix[2 *8 - 1: 1 *8] = 8'b111_00000; // -1
+        ix[3 *8 - 1: 2 *8] = 8'b001_00000;
+        ix[4 *8 - 1: 3 *8] = 8'b111_00000;
+        ix[5 *8 - 1: 4 *8] = 8'b001_00000;
+        ix[6 *8 - 1: 5 *8] = 8'b111_00000;
+        ix[7 *8 - 1: 6 *8] = 8'b001_00000;
+        ix[8 *8 - 1: 7 *8] = 8'b111_00000;
+        ix[9 *8 - 1: 8 *8] = 8'b001_00000;
+        ix[10*8 - 1: 9 *8] = 8'b111_00000;
+        ix[11*8 - 1: 10*8] = 8'b001_00000;
+        ix[12*8 - 1: 11*8] = 8'b111_00000;
+        ix[13*8 - 1: 12*8] = 8'b001_00000;
+        ix[14*8 - 1: 13*8] = 8'b111_00000;
+        ix[15*8 - 1: 14*8] = 8'b001_00000;
+        ix[16*8 - 1: 15*8] = 8'b111_00000;
+        ix[17*8 - 1: 16*8] = 8'b001_00000;
+        ix[18*8 - 1: 17*8] = 8'b111_00000;
+        ix[19*8 - 1: 18*8] = 8'b001_00000;
+        ix[20*8 - 1: 19*8] = 8'b111_00000;
+
+        iw[1 *16 - 1: 0 *16] = 16'b111111_0000000000; // -1
+        iw[2 *16 - 1: 1 *16] = 16'b111110_0000000000; // -2
+        iw[3 *16 - 1: 2 *16] = 16'b111111_0000000000;
+        iw[4 *16 - 1: 3 *16] = 16'b111110_0000000000;
+        iw[5 *16 - 1: 4 *16] = 16'b111111_0000000000;
+        iw[6 *16 - 1: 5 *16] = 16'b111110_0000000000;
+        iw[7 *16 - 1: 6 *16] = 16'b111111_0000000000;
+        iw[8 *16 - 1: 7 *16] = 16'b111110_0000000000;
+        iw[9 *16 - 1: 8 *16] = 16'b111111_0000000000;
+        iw[10*16 - 1: 9 *16] = 16'b111110_0000000000;
+        iw[11*16 - 1: 10*16] = 16'b111111_0000000000;
+        iw[12*16 - 1: 11*16] = 16'b111110_0000000000;
+        iw[13*16 - 1: 12*16] = 16'b111111_0000000000;
+        iw[14*16 - 1: 13*16] = 16'b111110_0000000000;
+        iw[15*16 - 1: 14*16] = 16'b111111_0000000000;
+        iw[16*16 - 1: 15*16] = 16'b111110_0000000000;
+        iw[17*16 - 1: 16*16] = 16'b111111_0000000000;
+        iw[18*16 - 1: 17*16] = 16'b111110_0000000000;
+        iw[19*16 - 1: 18*16] = 16'b111111_0000000000;
+        iw[20*16 - 1: 19*16] = 16'b111110_0000000000;
+
+        iBias = 16'b000001_0000000000; //1 
+        iFlagBias = 1'b1;
+        iQtdEntradas = 5'd20;
+
+        start = 1'b0; #50
+        start = 1'b1; #50
+        start = 1'b0;
+
+        #500;
+        $stop;
+
+    end
+
+endmodule
+
+module clockGeneratorByPeriod #(parameter period = 5)(
+    output clk
+);
+    reg outClk;
+
+    initial outClk = 1'b0;                   // clk is initially 0
+
+    always
+    begin
+        #(period/2) outClk = ~outClk;        // after a delay of period, the clk receives its inverse
+    end
+
+    assign clk = outClk;
+
+endmodule
