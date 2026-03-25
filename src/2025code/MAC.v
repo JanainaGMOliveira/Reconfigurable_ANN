@@ -1,29 +1,29 @@
-module mac #(parameter neuros = 20)(
-	output reg [31:0] oSum,
-	output reg oSumOK,
+module mac #(parameter neurons = 20, N = 8)(
+	output reg [4*N-1:0] oSum,
+	output reg sumReady,
 	input clk,
 	input start,
-	input [(neuros * 8)-1:0] ix,  // mac inputs
-	input [(neuros * 16)-1:0] iw, // weights
-	input [15:0] iBias,           // bias
-	input iFlagBias,              // 1: there is bias
+	input [(neurons * N)-1:0] ix,  // mac inputs
+	input [(neurons * N * 2)-1:0] iw, // weights
+	input [2*N-1:0] iBias,           // bias
+	input enableBias,              // 1: there is bias
 	input [4:0] iNumberInputs
 );
 	// get the values for each input
-	wire [7:0] auxX [0:neuros-1];
+	wire [N-1:0] auxX [0:neurons-1];
 	genvar j;
 	generate
-		for (j = 0; j < neuros; j = j + 1)
+		for (j = 0; j < neurons; j = j + 1)
 		begin
-			assign auxX[j] = ix[(j*8 + 7) -: 8];
+			assign auxX[j] = ix[(j*N + N-1) -: N];
 		end
 	endgenerate
 
-	wire [15:0] auxW [0:neuros-1];
+	wire [2*N-1:0] auxW [0:neurons-1];
 	generate
-		for (j = 0; j < neuros; j = j + 1)
+		for (j = 0; j < neurons; j = j + 1)
 		begin
-			assign auxW[j] = iw[(j*16 + 15) -: 16];
+			assign auxW[j] = iw[(j*2*N + 2*N-1) -:2*N];
 		end
 	endgenerate
 
@@ -43,22 +43,22 @@ module mac #(parameter neuros = 20)(
 	
 	assign auxS = SumOverflow(auxProd1, auxPro2);
 	
-	function [31:0] SumOverflow;
-		input [31:0] iA, iB;
+	function [4*N-1:0] SumOverflow;
+		input [4*N-1:0] iA, iB;
 		
-		reg [31:0] aux;
+		reg [4*N-1:0] aux;
 		begin
 			aux = iA + iB;
-			if (iA[31] == 1'b1 & iB[31] == 1'b1 & aux[31] == 1'b0)
-				aux = {1'b1, {31{1'b0}}};
-			else if (iA[31] == 1'b0 & iB[31] == 1'b0 & aux[31] == 1'b1)
-				aux = {1'b0, {31{1'b1}}};
+			if (iA[4*N-1] == 1'b1 & iB[4*N-1] == 1'b1 & aux[4*N-1] == 1'b0)
+				aux = {1'b1, {4*N-1{1'b0}}};
+			else if (iA[4*N-1] == 1'b0 & iB[4*N-1] == 1'b0 & aux[4*N-1] == 1'b1)
+				aux = {1'b0, {4*N-1{1'b1}}};
 				
 			SumOverflow = aux;
 		end
 	endfunction
 	
-	always @(negedge clk, posedge start)
+	always @(negedge clk, start)
 	begin
 		if(start)
 		begin
@@ -75,17 +75,17 @@ module mac #(parameter neuros = 20)(
 		case (currentState)
 			S0: // INITIAL PREPARATION MAC
 			begin
-				oSumOK = 1'b0;
+				sumReady = 1'b0;
 				i = 5'b0;
-				auxX1 = auxX[i];
-				auxW1 = auxW[i];
-				auxX2 = auxX[i+1];
-				auxW2 = auxW[i+1];
+				auxX1 = 0;//auxX[i];
+				auxW1 = 0;//auxW[i];
+				auxX2 = 0;//auxX[i+1];
+				auxW2 = 0;//auxW[i+1];
 				
-				if (iFlagBias)
+				if (enableBias)
 					oSum = {{6{iBias[15]}}, iBias, {10{1'b0}}}; 
 				else
-					oSum = 32'b0;
+					oSum = {4*N{1'b0}};
 				
 				if(start)
 					nextState = S0;
@@ -100,7 +100,7 @@ module mac #(parameter neuros = 20)(
 				auxX2 = auxX[i+1];
 				auxW2 = auxW[i+1];
 				
-				if ((iNumberInputs - 3) > i)
+				if (iNumberInputs > i)
 				begin
 					i = i + 2; // INCREASE COUNTER - 2 multiplications each time
 					nextState = S1;
@@ -116,13 +116,13 @@ module mac #(parameter neuros = 20)(
 			end
 			S2: // END OF MULTIPLICATIONS
 			begin
-				oSumOK = 1'b1;
+				sumReady = 1'b1;
 				
 				nextState <= S0;
 			end
 			default:
 			begin
-				oSumOK = 1'b0;
+				sumReady = 1'b0;
 				nextState = S0;
 			end
 		endcase

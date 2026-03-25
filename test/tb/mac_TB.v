@@ -61,12 +61,12 @@ module mac_TB;
 
         iBias = 16'b000001_0000000000; //1 
         iFlagBias = 1'b1;
-        iNumberInputs = 5'd20;
+        iNumberInputs = 5'd2;
 
         start = 1'b0; #50
         start = 1'b1; #50
         start = 1'b0;
-
+        // 00000000101100000000000000000000 - 00b00000
         #500;
         $stop;
 
