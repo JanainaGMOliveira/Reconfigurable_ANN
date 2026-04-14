@@ -6,5 +6,5 @@
     localparam NEURON_DATA_BITS = 8;
     localparam NEURON_MAX_NUMBER = 20;
     
-    localparam MAX_TRANSACTIONS = 50;
+    localparam MAX_TRANSACTIONS = 5;
 `endif

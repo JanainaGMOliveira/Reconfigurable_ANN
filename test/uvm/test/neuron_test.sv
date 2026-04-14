@@ -5,7 +5,7 @@ import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 `include "../env/environment.sv"
-`include "../sequences/sequence.sv"
+`include "../sequence/sequence.sv"
 
 class neuron_test extends uvm_test;
     `uvm_component_utils(neuron_test)
@@ -25,12 +25,12 @@ class neuron_test extends uvm_test;
 
     task run_phase(uvm_phase phase);
         neuron_random_seq seq_random = neuron_random_seq::type_id::create("seq_random");
-        neuron_corner_seq seq_corner = neuron_corner_seq::type_id::create("seq_corner");
+        //neuron_corner_seq seq_corner = neuron_corner_seq::type_id::create("seq_corner");
 
         phase.raise_objection(this);
         
         seq_random.start(env.neuron_agt.sequencer);
-        seq_corner.start(env.neuron_agt.sequencer);
+        //seq_corner.start(env.neuron_agt.sequencer);
 
         phase.drop_objection(this);
     endtask

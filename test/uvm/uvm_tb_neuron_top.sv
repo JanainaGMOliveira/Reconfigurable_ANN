@@ -1,7 +1,7 @@
 `timescale 1ns/10ps
 import ann_pkg::*;
 `include "ann_pkg.sv"
-`include "tests/neuron_test.sv"
+`include "test/neuron_test.sv"
 `include "ann_macros.svh"
 
 module uvm_tb_top;
@@ -14,17 +14,17 @@ module uvm_tb_top;
 
     neuron #(.neurons(NEURON_MAX_NUMBER), .N(NEURON_DATA_BITS)) 
             DUT(
-                .oNeuron      (bfm.oNeuron      ),
-                .oReadyNeuron (bfm.oReadyNeuron ),
+                .oNeuron      (bfm.neuronValue  ),
+                .oReadyNeuron (bfm.readyNeuron  ),
                 .clk          (bfm.clk          ),
-                .iEnable      (bfm.iEnable      ),
-                .iStart       (bfm.iStart       ),
+                .iEnable      (bfm.enable       ),
+                .iStart       (bfm.start        ),
                 .ix           (bfm.ix           ),
                 .iw           (bfm.iw           ),
-                .iBias        (bfm.iBias        ),
+                .iBias        (bfm.bias         ),
                 .enableBias   (bfm.enableBias   ),
-                .iCtrlAF      (bfm.iCtrlAF      ),
-                .iNumberInputs(bfm.iNumberInputs)
+                .iCtrlAF      (bfm.ctrlAF       ),
+                .iNumberInputs(bfm.numberInputs )
             );
 
     initial

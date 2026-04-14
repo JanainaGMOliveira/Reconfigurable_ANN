@@ -4,6 +4,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
+`include "ann_macros.svh"
 interface neuron_bfm;
     bit clk;
 
@@ -12,7 +13,7 @@ interface neuron_bfm;
 	bit start; // starts neuron
 	bit [(NEURON_MAX_NUMBER * NEURON_DATA_BITS) - 1:0] ix;
 	bit [(NEURON_MAX_NUMBER * NEURON_DATA_BITS * 2)-1:0] iw;
-	bit [2 * NEURON_DATA_BITS - 1:0] iBias;
+	bit [2 * NEURON_DATA_BITS - 1:0] bias;
 	bit enableBias;
 	bit [1:0] ctrlAF; // AF control: 00 bipolar, 01 rampa, 10 sig, 11 tanh.
 	bit [4:0] numberInputs;

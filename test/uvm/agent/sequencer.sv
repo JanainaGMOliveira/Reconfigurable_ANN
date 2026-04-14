@@ -3,7 +3,7 @@
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
-`include "../transaction.sv"
+`include "../transaction_neuron.sv"
 
 class neuron_sequencer extends uvm_sequencer #(neuron_transaction);
     `uvm_component_utils(neuron_sequencer)

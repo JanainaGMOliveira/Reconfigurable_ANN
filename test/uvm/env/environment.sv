@@ -4,7 +4,7 @@
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
-`include "../agents/agent.sv"
+`include "../agent/agent.sv"
 `include "../scoreboard/scoreboard.sv" 
 `include "../coverage/coverage.sv"
 
